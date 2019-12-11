@@ -517,7 +517,7 @@ public class GameManager : MonoBehaviour
 
     public bool CanCastle(GameObject rook)
     {
-        Debug.Log("Castle");
+        //Debug.Log("Castle");
         Vector3 castlemoveOOO = new Vector3(rook.transform.position.x - 3, rook.transform.position.y, rook.transform.position.z);
         Vector3 castlemoveOO = new Vector3(rook.transform.position.x + 2, rook.transform.position.y, rook.transform.position.z);
         Piece rookp = rook.GetComponent<Piece>();
@@ -571,11 +571,11 @@ public class GameManager : MonoBehaviour
                     }
 
                 }
-                Debug.Log(rookp.hasMovedBefore);
-                Debug.Log(whitep.hasMovedBefore);
-                Debug.Log(wo.Count);
-                Debug.Log(isAttacked(wline, wattacks));
-                Debug.Log(isWhitePlayerinCheck);
+                //Debug.Log(rookp.hasMovedBefore);
+               // Debug.Log(whitep.hasMovedBefore);
+                //Debug.Log(wo.Count);
+                //Debug.Log(isAttacked(wline, wattacks));
+                //Debug.Log(isWhitePlayerinCheck);
                 return (!rookp.hasMovedBefore && !whitep.hasMovedBefore && wo.Count == 0 && !isAttacked(wline, wattacks)
                     && !isWhitePlayerinCheck);
         }

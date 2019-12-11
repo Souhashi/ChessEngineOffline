@@ -153,7 +153,10 @@ public class BoardGenerator : MonoBehaviour
         }
         
     }
-    public void GetPoint(string piece)
+
+   
+
+public void GetPoint(string piece)
     {
         int x = positions[piece].x;
         int y = positions[piece].y;
