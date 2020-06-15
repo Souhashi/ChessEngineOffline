@@ -14,12 +14,13 @@ public class StockfishLauncher : MonoBehaviour
     GameObject s, enemypiece;
     Piece p;
     string s_name;
+    string starting_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     // Start is called before the first frame update
     string targetpiece, targetsquare;
     void Start()
     {
         myProcess = new Process();
-        myProcess.StartInfo = new ProcessStartInfo("C:\\Users\\SOUHASHI\\Downloads\\stockfish-10-win\\stockfish-10-win\\Windows\\stockfish_10_x64.exe");
+        myProcess.StartInfo = new ProcessStartInfo("C:/Users/Andre/Downloads/stockfish-10-win/Windows/stockfish_10_x64");
         myProcess.OutputDataReceived += new DataReceivedEventHandler(MyProcOutputHandler);
 
 
@@ -29,15 +30,36 @@ public class StockfishLauncher : MonoBehaviour
         myProcess.StartInfo.RedirectStandardInput = true;
         myProcess.StartInfo.RedirectStandardOutput = true;
         myProcess.StartInfo.RedirectStandardError = true;
-        
+        myProcess.StartInfo.CreateNoWindow = true;
 
         myProcess.Start();
         myProcess.BeginOutputReadLine();
         
         myProcess.BeginErrorReadLine();
         myProcess.StandardInput.WriteLine("ucinewgame");
+        if (GameManager.Instance.AI == GameManager.Player.White) {
+
+            FeedTheStockfish(starting_position);
+        }
 
         
+    }
+    int GetPieceIndex(char piece) {
+        switch (piece) {
+            case 'n':
+                return 2;
+            case 'b':
+                return 1;
+            case 'q':
+                return 4;
+            case 'r':
+                return 3;
+            default:
+                return 0;
+        }
+    }
+    bool shouldCastle(string move) {
+        return(move== "e1g1"|| move == "e1c1" || move == "e8g8" || move == "e8c8"); 
     }
     void TimedFunction()
     {
@@ -45,12 +67,44 @@ public class StockfishLauncher : MonoBehaviour
         string[] responses = response.Split('|');
         string bestmove = responses[responses.Length - 1];
         string[] bestmoves = bestmove.Split(' ');
+        char promoted_piece='k';
+        bool shouldPromote = false;
         bestmove = bestmoves[1];
+        bool Castle = shouldCastle(bestmove);
         UnityEngine.Debug.Log(bestmove);
         targetpiece = bestmove.Substring(0, 2);
         targetsquare = bestmove.Substring(2, 2);
-        UnityEngine.Debug.Log(targetpiece+" "+targetsquare);
-        PerformMove(targetpiece, targetsquare);
+        if (Castle) {
+            switch (bestmove) {
+
+                case "e1g1":
+                    targetpiece = "h1";
+                    targetsquare = "f1";
+                    break;
+                case "e1c1":
+                    targetpiece = "a1";
+                    targetsquare = "d1";
+                    break;
+                case "e8g8":
+                    targetpiece = "h8";
+                    targetsquare = "f8";
+                    break;
+                case "e8c8":
+                    targetpiece = "a8";
+                    targetsquare = "d8";
+                    break;
+
+            }
+
+        }
+        
+        
+        UnityEngine.Debug.Log(bestmove.Length);
+        if (bestmove.Length == 5) {
+            promoted_piece = bestmove[bestmove.Length - 1];
+            shouldPromote = true;
+        }
+        PerformMove(targetpiece, targetsquare, shouldPromote, GetPieceIndex(promoted_piece), Castle);
     }
 
     Transform GetChild(Transform t, string name)
@@ -90,7 +144,7 @@ public class StockfishLauncher : MonoBehaviour
 
     }
 
-    void PerformMove(string targetpiece, string targetsquare)
+    void PerformMove(string targetpiece, string targetsquare, bool shouldPromote, int piece, bool Castle)
     {
         UnityEngine.Debug.Log(targetpiece + " " + targetsquare);
         Vector3 piece_point = GetChild(GameManager.Instance.transform,targetpiece).position;
@@ -105,7 +159,7 @@ public class StockfishLauncher : MonoBehaviour
                 p = s.GetComponent<Piece>();
                 if (p != null)
                 {
-                    if (p.pColor.ToString() == "Black")
+                    if (p.pColor.ToString() == GameManager.Instance.AI.ToString())
                     {
                         //Debug.Log(p.piecetype);
                         BoardGenerator.Instance.SetPiece(s_name);
@@ -144,7 +198,7 @@ public class StockfishLauncher : MonoBehaviour
                         GameManager.Instance.halfmove = 0;
                     }
 
-                    if (p.piecetype == Piece.Pieces.Rook && Input.GetKey(KeyCode.Q) && GameManager.Instance.CanCastle(s))
+                    if (p.piecetype == Piece.Pieces.Rook && Castle && GameManager.Instance.CanCastle(s))
                     {
                         GameManager.Instance.Castle(p, target_point);
                         p.hasMovedBefore = true;
@@ -183,11 +237,9 @@ public class StockfishLauncher : MonoBehaviour
                     GameManager.Instance.SetCheck(false);
                     GameManager.Instance.isScanComplete = false;
                     p.SetStatusMaterial(Piece.Status.Free);
-                    if (GameManager.Instance.canBePromoted(p))
+                    if (shouldPromote)
                     {
-                        UnityEngine.Debug.Log(p.piecetype + " can be promoted!");
-                        GameManager.Instance.ActivatePromotionMenu();
-                        Time.timeScale = 0f;
+                        GameManager.Instance.SwapPiece(piece);
                     }
                     UnityEngine.Debug.Log(GameManager.Instance.current_player);
 
@@ -214,7 +266,12 @@ public class StockfishLauncher : MonoBehaviour
             
         }
     }
-
+    private void OnApplicationQuit()
+    {
+        myProcess.CloseMainWindow();
+        // Free resources associated with process.
+        myProcess.Close();
+    }
     // Update is called once per frame
     void Update()
     {

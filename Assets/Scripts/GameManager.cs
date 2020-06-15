@@ -11,6 +11,8 @@ public class GameManager : MonoBehaviour
     public enum Status { FreeMove, PieceSelected, PieceMoving, CheckMate};
     public enum Player { Black, White};
     public Player current_player;
+    public Player Human;
+    public Player AI;
     public Status currentBoardStatus;
     public GameObject currentPiece;
     public Grid grid;
@@ -40,7 +42,7 @@ public class GameManager : MonoBehaviour
         InitialiseCapturePositions();
         currentBoardStatus = Status.FreeMove;
         current_player = Player.White;
-       
+        CheckCameras();
         g = transform.position;
         isScanComplete = false;
         IsPaused = false;
@@ -67,7 +69,7 @@ public class GameManager : MonoBehaviour
 
     public void CheckCameras()
     {
-        switch (current_player)
+        switch (Human)
         {
             case Player.Black:
                 if (!bp_camera.gameObject.activeSelf)

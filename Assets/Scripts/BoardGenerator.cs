@@ -144,7 +144,7 @@ public class BoardGenerator : MonoBehaviour
         FEN += " " + GameManager.Instance.halfmove;
         FEN += " " + GameManager.Instance.fullmove;
 
-        if (GameManager.Instance.current_player.ToString() == "White")
+        if (GameManager.Instance.current_player.ToString() == GameManager.Instance.Human.ToString())
         {
             
             StockfishLauncher.Instance.FeedTheStockfish(FEN);
